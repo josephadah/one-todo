@@ -6,6 +6,7 @@ const _ = require('lodash');
 
 require('./db/mongoose');
 const {Todo} = require('./models/todo.model');
+const {User} = require('./models/user.model');
 
 const port = process.env.PORT;
 
@@ -84,6 +85,20 @@ app.delete('/api/todos/:id', (req, res) => {
         res.status(200).send(`Successfully removed todo: ${doc.text}`);
     }, err => res.status(400).send());
 });
+
+app.post('/api/users', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
+
+    const newUser = new User(body);
+
+    newUser.save().then(() => {
+        return newUser.generateAuthToken();
+    })
+    .then((token) => {
+        res.header('x-auth', token).send(newUser);
+    })
+    .catch(e => res.status(400).send(e));
+})
 
 app.listen(port, () => console.log(`Server running on port ${port} ...`));
 
