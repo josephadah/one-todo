@@ -7,6 +7,7 @@ const _ = require('lodash');
 require('./db/mongoose');
 const {Todo} = require('./models/todo.model');
 const {User} = require('./models/user.model');
+const {authenticate} = require('./middlewares/authenticate');
 
 const port = process.env.PORT;
 
@@ -98,7 +99,13 @@ app.post('/api/users', (req, res) => {
         res.header('x-auth', token).send(newUser);
     })
     .catch(e => res.status(400).send(e));
-})
+});
+
+
+
+app.get('/api/users/me', authenticate, (req, res) => {
+    res.send(req.user);
+});
 
 app.listen(port, () => console.log(`Server running on port ${port} ...`));
 
