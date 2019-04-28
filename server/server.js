@@ -2,6 +2,7 @@ require('./config/config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
 require('./db/mongoose');
@@ -101,7 +102,21 @@ app.post('/api/users', (req, res) => {
     .catch(e => res.status(400).send(e));
 });
 
+app.post('/api/users/login', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
 
+    User.findByCredentials(body.email, body.password).then((user) => {
+        user.generateAuthToken().then((token) => {
+            res.header('x-auth', token).send(user);
+        });
+    }).catch(e => res.status(400).send());
+});
+
+app.delete('/api/users/logout', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+        res.status(200).send();
+    }).catch(e => res.status(400).send());
+});
 
 app.get('/api/users/me', authenticate, (req, res) => {
     res.send(req.user);
